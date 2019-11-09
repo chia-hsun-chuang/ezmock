@@ -41,7 +41,7 @@
       integer,parameter :: max_data=1000000000 !for keeping particles to assign galaxies
       real :: ran3
       integer :: omp_get_max_threads
-      real,parameter    :: data_density = 0. !for output raw particle data !per grid cell
+      real,parameter    :: data_density = 0.1 !for output raw particle data !per grid cell
 !-- 2PCF
       real :: dilute_factor
       logical :: compute_CF
@@ -782,8 +782,9 @@ C$omp parallel do private(rx,ry,rz)
 
 !     
 !assign ZA particles to grid using NGP & CIC
-C$omp parallel do private(rx,ry,rz,xx,yy,zz,ix,iy,iz,
-C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
+!! no openmp here because of writing ZA particles in the loop
+!!C$omp parallel do private(rx,ry,rz,xx,yy,zz,ix,iy,iz,
+!!C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
       do i=0, total_num_thread-1
          rxx = i/(y_div_omp*z_div_omp)
          ryy = mod(i,y_div_omp*z_div_omp)/z_div_omp
@@ -821,9 +822,9 @@ C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
                end if
 
 !test generate raw za particles
-!               if(ran3(iseed) .lt. density) then
-!                  write(17,*) xx,yy,zz
-!               end if
+               if(ran3(iseed) .lt. density) then
+                  write(17,*) xx,yy,zz
+               end if
 !
 
 ! for NGP               
