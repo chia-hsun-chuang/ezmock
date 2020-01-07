@@ -418,6 +418,7 @@ c... for fftw
       real :: density_total, density_cut_total
 !adjust pdf
       real :: A_pdf, B_pdf, sum_pdf,sum_pdf_A
+      real :: norm
 
 
 !intitalize for doing cic with openmp (total_num_threads = x_div_omp*y_div_omp*z_div_omp)
@@ -570,8 +571,9 @@ C$OMP END PARALLEL
           do ry = 1, grid_num
             do rz = 1, grid_num,2  !might use every 2 since gaussion generator provide 2
               call gauss_ran(iseedxx(thread_id),ak,bk,thread_id)
-              vxarr_in(rx,ry,rz) = cmplx(ak,0)
-              vxarr_in(rx,ry,rz+1) = cmplx(bk,0)
+              norm = sqrt(ak**2+bk**2)
+              vxarr_in(rx,ry,rz) = cmplx(ak/norm,0)
+              vxarr_in(rx,ry,rz+1) = cmplx(bk/norm,0)
             end do
           end do
         end do
