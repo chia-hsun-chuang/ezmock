@@ -1,4 +1,4 @@
-! 20180413 add scatter2 to boost low density for modifying bik
+!     20180413 add scatter2 to boost low density for modifying bik
 ! use both particles and CIC to assign halos (when running out of particles for given grid point) -- 20171201
 !     EZmock2017 0107 use CIC displacement to assign velocity
 !     note: cleaner memory usage, optimize CIC, assign galaxies to particles (20161228)
@@ -570,10 +570,12 @@ C$OMP END PARALLEL
         do rx = 1, grid_num
           do ry = 1, grid_num
             do rz = 1, grid_num,2  !might use every 2 since gaussion generator provide 2
-              call gauss_ran(iseedxx(thread_id),ak,bk,thread_id)
-              norm = sqrt(ak**2+bk**2)
+               call gauss_ran(iseedxx(thread_id),ak,bk,thread_id)
+         !---fix amp
+              norm = sqrt(ak**2+bk**2)/sqrt(2.)
               vxarr_in(rx,ry,rz) = cmplx(ak/norm,0)
               vxarr_in(rx,ry,rz+1) = cmplx(bk/norm,0)
+         !---
             end do
           end do
         end do
