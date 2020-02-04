@@ -41,7 +41,7 @@
       integer,parameter :: max_data=1000000000 !for keeping particles to assign galaxies
       real :: ran3
       integer :: omp_get_max_threads
-      real,parameter    :: data_density = 0.1 !for output raw particle data !per grid cell
+      real,parameter    :: data_density = 1 !for output raw particle data !per grid cell
 !-- 2PCF
       real :: dilute_factor
       logical :: compute_CF
