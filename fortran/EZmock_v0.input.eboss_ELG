@@ -3,7 +3,7 @@
 ! output prefix
 !datafile_prefix = "EZmock_eboss_ELG_b5000g1024_z0p84_EAP0p15_dc0_ra1_zf150"
 !datafile_prefix = "EZmock_eboss_ELG_b5000g1024_z0p84_EAP0p25_dc0_ra1_zf150"
-datafile_prefix = "EZmock_eboss_ELG_b1250g256_z0p84_EAP0p25_dc0_ra1_zf150_fixamp"
+datafile_prefix = "EZmock_eboss_ELG_b1250g256_z0p84_EAP0p25_dc0_ra1_zf150_fixamp_sqrt2_seed2"
 
 !output path (need to create it in advance)
 datafile_path = "../mock_output/"
@@ -38,7 +38,7 @@ zdist_rate = 74.07
 zdist_fog = 150
 
 
-iseed = 1
+iseed = 2
 
 
 !NOT USED -- saturation or upper bound -- tune the amplitute of pk

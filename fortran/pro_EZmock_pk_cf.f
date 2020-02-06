@@ -673,11 +673,13 @@ C$omp do
               call splint(k_array,pk_arrayo,y2o,k_num,k_mag,pk_outo)
               tempo = sqrt(pk_outo/boxsize**3/2)
 !              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
+
+              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
+              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp
 ! ----- fix amp
-              norm =  sqrt(Real(vxarr_in(nx+1,ny+1,nz+1))**2 +
-     &         AIMAG(vxarr_in(nx+1,ny+1,nz+1))**2)/sqrt(2.)
-              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp/norm
-              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp/norm
+              norm = sqrt(ak**2+bk**2)/sqrt(2.)
+              ak = ak/norm
+              bk = bk/norm
 ! -----
               vxarr_in(nx+1,ny+1,nz+1)=
      &              cmplx(tempo*bk*kx/k_mag2,-tempo*ak*kx/k_mag2)
