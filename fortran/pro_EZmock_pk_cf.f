@@ -571,11 +571,8 @@ C$OMP END PARALLEL
           do ry = 1, grid_num
             do rz = 1, grid_num,2  !might use every 2 since gaussion generator provide 2
                call gauss_ran(iseedxx(thread_id),ak,bk,thread_id)
-         !---fix amp
-              norm = sqrt(ak**2+bk**2)/sqrt(2.)
-              vxarr_in(rx,ry,rz) = cmplx(ak/norm,0)
-              vxarr_in(rx,ry,rz+1) = cmplx(bk/norm,0)
-         !---
+              vxarr_in(rx,ry,rz) = cmplx(ak,0)
+              vxarr_in(rx,ry,rz+1) = cmplx(bk,0)
             end do
           end do
         end do
@@ -676,9 +673,12 @@ C$omp do
               call splint(k_array,pk_arrayo,y2o,k_num,k_mag,pk_outo)
               tempo = sqrt(pk_outo/boxsize**3/2)
 !              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
-
-              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
-              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp
+! ----- fix amp
+              norm =  sqrt(Real(vxarr_in(nx+1,ny+1,nz+1))**2 +
+     &         AIMAG(vxarr_in(nx+1,ny+1,nz+1))**2)/sqrt(2.)
+              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp/norm
+              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp/norm
+! -----
               vxarr_in(nx+1,ny+1,nz+1)=
      &              cmplx(tempo*bk*kx/k_mag2,-tempo*ak*kx/k_mag2)
               vyarr_in(nx+1,ny+1,nz+1)=
