@@ -571,11 +571,8 @@ C$OMP END PARALLEL
           do ry = 1, grid_num
             do rz = 1, grid_num,2  !might use every 2 since gaussion generator provide 2
                call gauss_ran(iseedxx(thread_id),ak,bk,thread_id)
-         !---fix amp
-              norm = sqrt(ak**2+bk**2)/sqrt(2.)
-              vxarr_in(rx,ry,rz) = cmplx(ak/norm,0)
-              vxarr_in(rx,ry,rz+1) = cmplx(bk/norm,0)
-         !---
+              vxarr_in(rx,ry,rz) = cmplx(ak,0)
+              vxarr_in(rx,ry,rz+1) = cmplx(bk,0)
             end do
           end do
         end do
@@ -679,6 +676,11 @@ C$omp do
 
               ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
               bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp
+! ----- fix amp
+              norm = sqrt(ak**2+bk**2)/sqrt(2.)
+              ak = ak/norm
+              bk = bk/norm
+! -----
               vxarr_in(nx+1,ny+1,nz+1)=
      &              cmplx(tempo*bk*kx/k_mag2,-tempo*ak*kx/k_mag2)
               vyarr_in(nx+1,ny+1,nz+1)=
