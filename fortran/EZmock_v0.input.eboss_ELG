@@ -3,7 +3,7 @@
 ! output prefix
 !datafile_prefix = "EZmock_eboss_ELG_b5000g1024_z0p84_EAP0p15_dc0_ra1_zf150"
 !datafile_prefix = "EZmock_eboss_ELG_b5000g1024_z0p84_EAP0p25_dc0_ra1_zf150"
-datafile_prefix = "EZmock_eboss_ELG_b1250g256_z0p84_EAP0p25_dc0_ra1_zf150"
+datafile_prefix = "EZmock_eboss_ELG_b1250g256_z0p84_EAP0p25_dc0_ra1_zf150_output_den"
 
 !output path (need to create it in advance)
 datafile_path = "../mock_output/"

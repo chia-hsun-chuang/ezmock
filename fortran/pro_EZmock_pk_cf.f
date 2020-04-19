@@ -376,7 +376,7 @@ c... for fftw
       complex,allocatable, dimension(:,:,:) ::
      & vxarr_in, vyarr_in, vzarr_in
       real, allocatable, dimension(:,:,:) ::
-     &     temp_array, temp_array2, temp_array3!,temp_array4
+     &     temp_array, temp_array2, temp_array3, temp_array4
       integer, allocatable, dimension(:,:,:) :: temp_int_array
       integer,parameter :: max_num = 200
       integer :: pdf(0:max_num)
@@ -397,7 +397,7 @@ c... for fftw
       real :: np_ratio, exp
       real,allocatable :: dataxyz(:,:)
       real,allocatable :: dataxyz_omp(:,:,:) !(6,data,thread_num)
-      real :: dataxyz_temp(6)
+      real :: dataxyz_temp(7)
       logical :: dataxyz_keep(max_data)
       integer :: time, time1, time2
 
@@ -1157,13 +1157,23 @@ C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
 
 ! save za particle cic in temp_array4
 !      allocate(temp_array4(grid_num,grid_num,grid_num))  !left: vxarr_in, vyarr_in, vzarr_in, temp_array4
-      allocate(temp_array(grid_num,grid_num,grid_num))  !left: vxarr_in, vyarr_in, vzarr_in, temp_array4
+       allocate(temp_array(grid_num,grid_num,grid_num)) !left: vxarr_in, vyarr_in, vzarr_in, temp_array4
+       allocate(temp_array4(grid_num,grid_num,grid_num)) 
 C$omp parallel do private(rx,ry,rz)
       do rx = 1, grid_num
         do ry = 1, grid_num
           do rz = 1, grid_num
 !         temp_array4(rx,ry,rz) = aimag(vyarr_in(rx,ry,rz)) !NGP
          temp_array(rx,ry,rz) = aimag(vxarr_in(rx,ry,rz))/cell_size**3 !CIC
+          end do
+        end do
+      end do
+
+C$omp parallel do private(rx,ry,rz)
+      do rx = 1, grid_num
+        do ry = 1, grid_num
+          do rz = 1, grid_num
+         temp_array4(rx,ry,rz) = temp_array(rx,ry,rz)
           end do
         end do
       end do
@@ -1373,9 +1383,9 @@ C$omp do
 
       write(*,*) "zdist_rate", zdist_rate, zdist_fog
 
-      allocate(dataxyz_omp(6,max_data/total_num_thread,
+      allocate(dataxyz_omp(7,max_data/total_num_thread,
      &     total_num_thread))
-      allocate(dataxyz(6,max_data))
+      allocate(dataxyz(7,max_data))
       allocate(temp_int_array(grid_pdf,grid_pdf,grid_pdf))
 
 C$omp parallel do private(rx,ry,rz)
@@ -1486,6 +1496,9 @@ C$omp+ np,np_ratio,thread_id,ak,bk,temp,temp2,temp3,temp4)
                   dataxyz_omp(1,data_index(thread_id),thread_id)=xx
                   dataxyz_omp(2,data_index(thread_id),thread_id)=yy
                   dataxyz_omp(3,data_index(thread_id),thread_id)=zz
+! add ZA CIC density as 7th column 
+                  dataxyz_omp(7,data_index(thread_id),thread_id)=
+     &               temp_array4(ix, iy, iz)
                   
 !! add velocity with NGP
 !                  
@@ -1675,7 +1688,7 @@ C$omp+ np,np_ratio,thread_id,ak,bk,temp,temp2,temp3,temp4)
       do i=1, total_num_thread
          do j=1, data_index(i)
             count=count+1
-            dataxyz(1:6,count)=dataxyz_omp(1:6,j,i)
+            dataxyz(1:7,count)=dataxyz_omp(1:7,j,i)
          end do
       end do
 !      write(*,*) count, "should equal", mock_data_num
@@ -1686,9 +1699,9 @@ C$omp+ np,np_ratio,thread_id,ak,bk,temp,temp2,temp3,temp4)
       do i= mock_data_num, 2, -1
 
             k=int(ran3(iseed)*i)+1
-            dataxyz_temp(1:6) = dataxyz(1:6,i)
-            dataxyz(1:6,i) = dataxyz(1:6,k)
-            dataxyz(1:6,k) = dataxyz_temp(1:6)
+            dataxyz_temp(1:7) = dataxyz(1:7,i)
+            dataxyz(1:7,i) = dataxyz(1:7,k)
+            dataxyz(1:7,k) = dataxyz_temp(1:7)
 
       end do
       write(*,*) "done shuffling array"
@@ -1775,7 +1788,8 @@ C$omp+ np,np_ratio,thread_id,ak,bk,temp,temp2,temp3,temp4)
            write(17,'(6F10.3)')
      &     real(dataxyz(1,i)),real(dataxyz(2,i)),
      &         real(dataxyz(3,i)), real(dataxyz(4,i)),
-     &           real(dataxyz(5,i)),real(dataxyz(6,i))
+     &           real(dataxyz(5,i)),real(dataxyz(6,i)),
+     &           real(dataxyz(7,i))           
          end if
 !          write(17,*) dataxyz_omp(1:6,j,i)
        ! end do
@@ -1891,6 +1905,8 @@ C$omp do
                  xx = dataxyz_omp(1,data_index(thread_id),thread_id)
                  yy = dataxyz_omp(2,data_index(thread_id),thread_id)
                  zz = dataxyz_omp(3,data_index(thread_id),thread_id)
+                 dataxyz_omp(4,data_index(thread_id),thread_id)=
+     &             temp_array4(rx,ry,rz)
 ! add velocity
                ix = int(xx/cell_size)+1
                if (ix .gt. grid_pdf) ix=grid_pdf
@@ -2069,7 +2085,8 @@ C$omp do
          write(17,'(6F10.3)')
      &  real(dataxyz_omp(1,j,i)),real(dataxyz_omp(2,j,i)),
      &         real(dataxyz_omp(3,j,i)), real(dataxyz_omp(4,j,i)),
-     &              real(dataxyz_omp(5,j,i)),real(dataxyz_omp(6,j,i))
+     &          real(dataxyz_omp(5,j,i)),real(dataxyz_omp(6,j,i)),
+     &              real(dataxyz_omp(7,j,i))
 !          write(17,*) dataxyz_omp(1:6,j,i)
         end do
       end do
