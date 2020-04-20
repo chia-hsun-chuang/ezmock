@@ -1,6 +1,6 @@
 
 F77  = ifort
-FFLAGS  = -O -fpp -openmp
+FFLAGS  = -O -fpp -openmp -no-wrap-margin
 #LIB_FLAGS = -L$(FFTW3_LIBDIR) -lfftw3f -lfftw3 -lfftw3l -lm
 #INCLUDES = -I$(FFTW3_INCDIR)
 #OPENMP_LIB_FLAGS = -Wl,-static -L$(FFTW3_LIBDIR) -lfftw3f_omp -lfftw3_omp -lfftw3l_omp -lfftw3f -lfftw3 -lfftw3l -lm -Wl,-dy
