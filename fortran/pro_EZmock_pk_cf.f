@@ -1785,7 +1785,7 @@ C$omp+ np,np_ratio,thread_id,ak,bk,temp,temp2,temp3,temp4)
       do i = 1, mock_data_num
 !     do j = 1, data_index(i)
          if(dataxyz_keep(i) .eq. .true.) then
-           write(17,'(6F10.3)')
+           write(17,'(7F10.3)')
      &     real(dataxyz(1,i)),real(dataxyz(2,i)),
      &         real(dataxyz(3,i)), real(dataxyz(4,i)),
      &           real(dataxyz(5,i)),real(dataxyz(6,i)),
@@ -1905,7 +1905,7 @@ C$omp do
                  xx = dataxyz_omp(1,data_index(thread_id),thread_id)
                  yy = dataxyz_omp(2,data_index(thread_id),thread_id)
                  zz = dataxyz_omp(3,data_index(thread_id),thread_id)
-                 dataxyz_omp(4,data_index(thread_id),thread_id)=
+                 dataxyz_omp(7,data_index(thread_id),thread_id)=
      &             temp_array4(rx,ry,rz)
 ! add velocity
                ix = int(xx/cell_size)+1
@@ -2082,7 +2082,7 @@ C$omp do
 
       do i = 1, total_num_thread
         do j = 1, data_index(i)
-         write(17,'(6F10.3)')
+         write(17,'(7F10.3)')
      &  real(dataxyz_omp(1,j,i)),real(dataxyz_omp(2,j,i)),
      &         real(dataxyz_omp(3,j,i)), real(dataxyz_omp(4,j,i)),
      &          real(dataxyz_omp(5,j,i)),real(dataxyz_omp(6,j,i)),
