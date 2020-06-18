@@ -650,7 +650,12 @@ C$omp+ak,bk,nx_conj,ny_conj,nz_conj,thread_id)
 C$omp do
       do nx = 0, grid_num-1
         do ny = 0, grid_num-1
-          do nz = 0, grid_num-1
+           do nz = 0, grid_num-1
+              !remove frequecy larger than or equal to k_Ny/2
+           if ((nx .lt. grid_num/4 .or. nx .gt. grid_num/4*3) .and.
+     &         (ny .lt. grid_num/4 .or. ny .gt. grid_num/4*3) .and.
+     &         (nz .lt. grid_num/4 .or. nz .gt. grid_num/4*3)) then
+              
             if((nx .eq. 0) .and. (ny .eq. 0) .and. (nz .eq. 0)) then
               vxarr_in(1,1,1) = cmplx(0,0)
               vyarr_in(1,1,1) = cmplx(0,0)
@@ -677,7 +682,17 @@ C$omp do
               vzarr_in(nx+1,ny+1,nz+1)=
      &              cmplx(tempo*bk*kz/k_mag2,-tempo*ak*kz/k_mag2)
 
-            end if
+           end if
+
+        else
+              vxarr_in(nx+1,ny+1,nz+1)=
+     &              cmplx(0,0)
+              vyarr_in(nx+1,ny+1,nz+1)=
+     &              cmplx(0,0)
+              vzarr_in(nx+1,ny+1,nz+1)=
+     &              cmplx(0,0)
+
+           end if
           end do !kz
         end do !ky
       end do !kx
