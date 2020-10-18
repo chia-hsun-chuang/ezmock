@@ -24,6 +24,8 @@
       real :: zdist_fog !for FOG
       character*500  :: whitenoise_file
       logical        :: use_whitenoise_file
+      character*500  :: init_density_file
+      logical        :: use_init_density_file
       character*500     :: pkfile
       character*500     :: pknwfile
       character*500     :: datafile_path
@@ -73,7 +75,8 @@
      &  boxsize, grid_num,
      & grow2z0, scatter, scatter2, modify_pk, modify_pdf,
      & antidamping, density_cut, density_sat, zdist_rate,
-     & zdist_fog, whitenoise_file, use_whitenoise_file,
+     &     zdist_fog, whitenoise_file, use_whitenoise_file,
+     & init_density_file, use_init_density_file,  
      & pkfile, pknwfile, datafile_path, output_suffix,
      & compute_CF, compute_CF_zdist,
      & skiplines, twod_corr_suffix, max_r, bin_size,
@@ -87,7 +90,8 @@
      & boxsize, grid_num,
      & grow2z0, scatter, scatter2, modify_pk, modify_pdf,
      & antidamping, density_cut, density_sat, zdist_rate,
-     & zdist_fog, whitenoise_file, use_whitenoise_file,
+     &     zdist_fog, whitenoise_file, use_whitenoise_file,
+     & init_density_file, use_init_density_file,        
      & pkfile, pknwfile, datafile_path, output_suffix,
      & compute_CF, compute_CF_zdist,
      & skiplines, twod_corr_suffix, max_r, bin_size,
@@ -296,6 +300,7 @@
      &     data_num, output_file,max_data,scatter,scatter2,modify_pk,
      &     modify_pdf, antidamping, density_cut,density_sat,zdist_rate,
      &     zdist_fog, inverse_aH,whitenoise_file, use_whitenoise_file,
+     &     init_density_file, use_init_density_file,        
      &     expect_sum_pdf, expect_A_pdf)
       implicit none
 !      include 'fftw_f77.i'
@@ -326,6 +331,8 @@
       real,intent(in)          :: inverse_aH
       character*500,intent(in) :: whitenoise_file
       logical,intent(in)       :: use_whitenoise_file
+      character*500,intent(in) :: init_density_file
+      logical,intent(in)       :: use_init_density_file
 !     add pdf manually
       real,intent(in)          :: expect_sum_pdf
       real,intent(in)          :: expect_A_pdf
@@ -3345,3 +3352,4 @@ C-----------------------------------------------------
 
       end subroutine
       
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
