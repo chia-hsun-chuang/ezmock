@@ -116,7 +116,8 @@
      &  data_density, iseed,data_num, output_file,max_data,scatter,
      &  scatter2,modify_pk,modify_pdf,antidamping,density_cut,
      &  density_sat, zdist_rate, zdist_fog, inverse_aH,
-     &  whitenoise_file, use_whitenoise_file,
+     &     whitenoise_file, use_whitenoise_file,
+     &     init_density_file, use_init_density_file,   
      &     expect_sum_pdf,expect_A_pdf)
         
         write(*,*)
@@ -492,10 +493,8 @@ C$OMP END PARALLEL
       write(*,*) "finish initialization"
       time2 =  time()
       write(*,*) "time in sec:", time2-time1
-
       sum_pdf = expect_sum_pdf
       A_pdf = expect_A_pdf
-      
       sum_pdf_A = 0
       do i=1, 20
         sum_pdf_A = sum_pdf_A + A_pdf**i*i
@@ -570,7 +569,8 @@ C$OMP END PARALLEL
       call spline(k_array,pk_arrayo,k_num,1.0e30,1.0e30,y2o)
 
 !generate white noise on vxarr_in or read the white noise file
-      if(use_whitenoise_file .eq. .false.) then
+      if(use_whitenoise_file .eq. .false. .and.
+     &    use_init_density_file .eq. .false.) then
 
         thread_id = 1
         do rx = 1, grid_num
@@ -586,7 +586,7 @@ C$OMP END PARALLEL
         time2 =  time()
         write(*,*) "time in sec:", time2-time1
 
-      else
+      else if (use_whitenoise_file .eq. .true.) then
         write(*,*) "reading white noise file"
         open(10,file=Trim(whitenoise_file),form='unformatted')
         read (10) np1,np2,np3, temp_int
@@ -610,7 +610,7 @@ C$OMP END PARALLEL
 !         read(10,*) (temp_array(i1,i2,i3),i1=1,grid_num)
 !          end do
 !        enddo
-        close(10)
+!        close(10)
         write(*,*) "finish reading white noise file"
         time2 =  time()
         write(*,*) "time in sec:", time2-time1
@@ -625,6 +625,39 @@ C$omp parallel do private(rx,ry,rz)
           end do
         end do
         deallocate(temp_array) !left: vxarr_in(real part saves white noise)
+
+      else
+        write(*,*) "reading density file"
+        open(10,file=Trim(init_density_file),form='unformatted')
+        read (10) np1,np2,np3, temp_int
+        print*, 'np1,np2,np3,iseed'
+        print*, np1,np2,np3,temp_int
+        if (np1 .ne. grid_num) then
+          write(*,*)"the grid size does not match white noise file:",np1 
+          stop
+        end if
+        allocate(temp_array(grid_num,grid_num,grid_num)) !vxarr_in, temp_array
+        do i3=1,grid_num
+         read(10) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
+        enddo
+        close(10)
+
+        write(*,*) "finish reading initial density field file"
+        time2 =  time()
+        write(*,*) "time in sec:", time2-time1
+
+!move density field to vxarr_in
+C$omp parallel do private(rx,ry,rz)
+        do rx = 1, grid_num
+          do ry = 1, grid_num
+            do rz = 1, grid_num
+              vxarr_in(rx,ry,rz) = cmplx(temp_array(rx,ry,rz),0)
+            end do
+          end do
+        end do
+        deallocate(temp_array) !left: vxarr_in(real part saves white noise)
+         
+        
       end if
      
       
@@ -677,7 +710,10 @@ C$omp do
               k_mag2 = kx**2 + ky**2 + kz**2
               k_mag = sqrt(k_mag2)
               call splint(k_array,pk_arrayo,y2o,k_num,k_mag,pk_outo)
-              tempo = sqrt(pk_outo/boxsize**3/2)
+
+!     tempo = sqrt(pk_outo/boxsize**3/2)
+              !test Albert -- add rescaling factor from z_init to z_target
+              tempo=60.*sqrt(1./boxsize**3/2)
 !              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
 
               ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
@@ -3085,7 +3121,6 @@ c------------------------------------------
       write(*,*) "max number in the cells is", max_n_cell, "(data)"
       allocate(data_cell_array(nx*ny*nz,max_n_cell,4)) !4 for x,y,w,wt
 
-
 !assign data to cells
       do i=1,nx*ny*nz
         n_cell_data(i)=0
@@ -3103,7 +3138,9 @@ c------------------------------------------
         data_cell_array(nindex,n_cell_data(nindex),4)=wt(i)
       end do     
 
-
+!     test albert
+      write(*,*) "test seg"
+      
 !loop to go over all the pairs of cells to compute counts of galaxy pairs
 
       do i=1,num_r
@@ -3352,4 +3389,3 @@ C-----------------------------------------------------
 
       end subroutine
       
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
