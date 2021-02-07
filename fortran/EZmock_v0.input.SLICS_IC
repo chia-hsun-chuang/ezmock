@@ -1,0 +1,85 @@
+ &EZmock_v0_input
+
+! output prefix
+datafile_prefix = "EZmock_slics_test"
+
+!output path (need to create it in advance)
+datafile_path = "../mock_output/"
+
+boxsize  =500
+grid_num =192
+
+redshift = 0.84
+
+!G(z)^2 = G(0.84)^2 = 0.6546^2
+grow2z0 = 0.4285
+
+!!!density*boxsize^3
+expect_sum_pdf =125000
+	       
+!tune PDF
+expect_A_pdf =0.25
+
+! tune 3-point statistics
+density_cut = 0
+
+!i.e. rho_a -- for modify bk
+scatter2 = 1
+
+!f*H(z)*a/h = f*H/(1+z)/h = 0.84426*109.403/1.84/0.6777
+zdist_rate = 74.07
+
+!FOG parameter (close to 0 for FOF catalogs, about 100 for BDM catalogs)
+!zdist_fog = 350
+zdist_fog = 150
+
+
+iseed = 1
+
+
+!NOT USED -- saturation or upper bound -- tune the amplitute of pk
+density_sat = 100
+
+!fixed
+!scatter = 100
+scatter = 10
+
+!tilt pk at small scales. Typical value is about 0 to 1
+modify_pk = 0.0
+
+!tune the tail of pk. Typical value is -0.1 < modify_pdf < 0.1
+!modify_pdf = -0.03
+modify_pdf = 0
+
+!tune BAO signal; not used if >=1
+antidamping = 2
+
+use_whitenoise_file = .false. 
+whitenoise_file = "/home2/chuang/data/BigMD_BDM3p5_and_white_noise/BigMD_WhiteNoise/BigMD_960_wn_delta"
+
+use_init_density_file = .true.
+!init_density_file = "/global/cscratch1/sd/yuyu22/SLICS4EZmock/fields/LOS960IC0096.bin"
+init_density_file = "/global/cscratch1/sd/yuyu22/SLICS4EZmock/fields/LOS960IC0192.bin"
+
+pkfile ='../PlanckDM.linear.pk'
+!pkfile ='../Planck2015Table4LastColumn_matterpower.dat'
+
+!not used if antidamping > 1
+pknwfile = '../PlanckDM.nowiggle.pk'
+
+!!---input for computing 2PCF
+! compute CF or not
+compute_CF=.true.
+compute_CF_zdist=.false.
+
+! dilute_factor (fraction of the sample to keep)
+dilute_factor = 1
+
+!skip header
+skiplines=0
+twod_corr_suffix = '.bin5.corr'
+max_r = 250
+bin_size = 5
+om = 0.307115
+
+/
