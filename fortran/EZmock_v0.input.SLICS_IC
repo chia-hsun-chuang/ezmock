@@ -1,7 +1,7 @@
  &EZmock_v0_input
 
 ! output prefix
-datafile_prefix = "EZmock_slics_test"
+datafile_prefix = "EZmock_slics_test2"
 
 !output path (need to create it in advance)
 datafile_path = "../mock_output/"
@@ -12,7 +12,7 @@ grid_num =192
 redshift = 0.84
 
 !G(z)^2 = G(0.84)^2 = 0.6546^2
-grow2z0 = 0.4285
+grow2z0 = 3600
 
 !!!density*boxsize^3
 expect_sum_pdf =125000
@@ -57,9 +57,9 @@ antidamping = 2
 use_whitenoise_file = .false. 
 whitenoise_file = "/home2/chuang/data/BigMD_BDM3p5_and_white_noise/BigMD_WhiteNoise/BigMD_960_wn_delta"
 
-use_init_density_file = .true.
+!use_init_density_file = .true.
 !init_density_file = "/global/cscratch1/sd/yuyu22/SLICS4EZmock/fields/LOS960IC0096.bin"
-init_density_file = "/global/cscratch1/sd/yuyu22/SLICS4EZmock/fields/LOS960IC0192.bin"
+!init_density_file = "/global/cscratch1/sd/yuyu22/SLICS4EZmock/fields/LOS960IC0192.bin"
 
 pkfile ='../PlanckDM.linear.pk'
 !pkfile ='../Planck2015Table4LastColumn_matterpower.dat'

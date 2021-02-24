@@ -76,7 +76,7 @@
      & grow2z0, scatter, scatter2, modify_pk, modify_pdf,
      & antidamping, density_cut, density_sat, zdist_rate,
      &     zdist_fog, whitenoise_file, use_whitenoise_file,
-     & init_density_file, use_init_density_file,  
+!     & init_density_file, use_init_density_file,  
      & pkfile, pknwfile, datafile_path, output_suffix,
      & compute_CF, compute_CF_zdist,
      & skiplines, twod_corr_suffix, max_r, bin_size,
@@ -85,6 +85,17 @@
 !input                                                                                                                 
       read(*,EZmock_v0_input)
 
+      !Albert: hard code the new inputs here
+      use_init_density_file = .true.
+!      init_density_file =
+!     & "/global/cscratch1/sd/yuyu22/SLICS4EZmock/"//
+!     & "fields/LOS960IC0096.bin"
+      init_density_file =
+     & "/global/cscratch1/sd/yuyu22/SLICS4EZmock/"//
+     & "fields/LOS960IC0192.bin"
+      
+     
+      
       write(*,*) "pr_EZmock_pk_cf read input:",
      & datafile_prefix,
      & boxsize, grid_num,
@@ -713,7 +724,7 @@ C$omp do
 
 !     tempo = sqrt(pk_outo/boxsize**3/2)
               !test Albert -- add rescaling factor from z_init to z_target
-              tempo=60.*sqrt(1./boxsize**3/2)
+              tempo=sqrt(grow2z0/boxsize**3/2)
 !              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
 
               ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
