@@ -43,7 +43,7 @@
       integer,parameter :: max_data=1000000000 !for keeping particles to assign galaxies
       real :: ran3
       integer :: omp_get_max_threads
-      real,parameter    :: data_density = 0. !for output raw particle data !per grid cell
+      real,parameter    :: data_density = 1.0 !for output raw particle data !per grid cell
 !-- 2PCF
       real :: dilute_factor
       logical :: compute_CF
@@ -82,7 +82,7 @@
      & skiplines, twod_corr_suffix, max_r, bin_size,
      & redshift, om,  expect_sum_pdf, expect_A_pdf, iseed,dilute_factor
 
-!input                                                                                                                 
+!input                                                                                              
       read(*,EZmock_v0_input)
 
       !Albert: hard code the new inputs here
@@ -93,6 +93,7 @@
       init_density_file =
      & "/global/cscratch1/sd/yuyu22/SLICS4EZmock/"//
      & "fields/LOS960IC0192.bin"
+
       
      
       
@@ -724,7 +725,7 @@ C$omp do
 
 !     tempo = sqrt(pk_outo/boxsize**3/2)
               !test Albert -- add rescaling factor from z_init to z_target
-              tempo=sqrt(grow2z0/boxsize**3/2)
+              tempo=sqrt(grow2z0/grid_num**3/2) 
 !              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
 
               ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
@@ -797,7 +798,7 @@ C$omp end parallel
 
 !--- displacement field using CIC ----------------------- raw zeldovich particles
 ! using image part of array for CIC counting
-!      write(*,*) "count initial CIC for za particles"
+      write(*,*) "count initial CIC for za particles"
       open(17,file=Trim(output_file)//'.raw')
 
 C$omp parallel do private(rx,ry,rz)
@@ -849,10 +850,10 @@ C$omp parallel do private(rx,ry,rz)
          end do
       end do
 
-!     
-!assign ZA particles to grid using NGP & CIC
-C$omp parallel do private(rx,ry,rz,xx,yy,zz,ix,iy,iz,
-C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
+!comment out the OMP to write particles     
+!!assign ZA particles to grid using NGP & CIC
+!C$omp parallel do private(rx,ry,rz,xx,yy,zz,ix,iy,iz,
+!C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
       do i=0, total_num_thread-1
          rxx = i/(y_div_omp*z_div_omp)
          ryy = mod(i,y_div_omp*z_div_omp)/z_div_omp
@@ -889,10 +890,10 @@ C$omp+ x,y,z,xi,yi,zi,xii,yii,zii,i,rxx,ryy,rzz,rxi,ryi,rzi)
                    zz = zz - (int(zz/boxsize)-1)*boxsize
                end if
 
-!test generate raw za particles
-!               if(ran3(iseed) .lt. density) then
-!                  write(17,*) xx,yy,zz
-!               end if
+!!test generate raw za particles
+               if(ran3(iseed) .lt. density) then
+                  write(17,*) xx,yy,zz
+               end if
 !
 
 ! for NGP               
