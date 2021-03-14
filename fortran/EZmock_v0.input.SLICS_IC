@@ -1,7 +1,7 @@
  &EZmock_v0_input
 
 ! output prefix
-datafile_prefix = "EZmock_slics_test10"
+datafile_prefix = "EZmock_slics_test_back3"
 
 !output path (need to create it in advance)
 !datafile_path = "../mock_output/"
@@ -20,20 +20,20 @@ grow2z0 = 3197.41
 expect_sum_pdf =543000
 	       
 !tune PDF
-expect_A_pdf =0.2
+expect_A_pdf =0.58
 
 ! tune 3-point statistics
-density_cut = 1.21
+density_cut = 1.33
 
 !i.e. rho_a -- for modify bk
-scatter2 = 2
+scatter2 = 0.9
 
 !f*H(z)*a/h = f*H/(1+z)/h = 0.84426*109.403/1.84/0.6777
 zdist_rate = 76.086
 
 !FOG parameter (close to 0 for FOF catalogs, about 100 for BDM catalogs)
 !zdist_fog = 350
-zdist_fog = 100
+zdist_fog = 200
 
 
 iseed = 1

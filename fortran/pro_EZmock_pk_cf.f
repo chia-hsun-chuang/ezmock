@@ -771,7 +771,8 @@ C$omp end parallel
 
 !      FFTW3
       call sfftw_plan_dft_3d(planx, grid_num, grid_num, grid_num,
-     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+     &  vxarr_in, vxarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
       call sfftw_execute_dft(planx,vxarr_in,vxarr_in)
       call sfftw_destroy_plan(planx)
 
@@ -780,7 +781,8 @@ C$omp end parallel
 
 !      FFTW3
       call sfftw_plan_dft_3d(plany, grid_num, grid_num, grid_num,
-     &  vyarr_in, vyarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vyarr_in, vyarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+     &  vyarr_in, vyarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)
       call sfftw_execute_dft(plany,vyarr_in,vyarr_in)
       call sfftw_destroy_plan(plany)
 
@@ -789,7 +791,8 @@ C$omp end parallel
 
 !      FFTW3
       call sfftw_plan_dft_3d(planz, grid_num, grid_num, grid_num,
-     &  vzarr_in, vzarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vzarr_in, vzarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+     &  vzarr_in, vzarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
       call sfftw_execute_dft(planz,vzarr_in,vzarr_in)
       call sfftw_destroy_plan(planz)
 
@@ -892,7 +895,10 @@ C$omp parallel do private(rx,ry,rz)
 
 !!test generate raw za particles
                if(ran3(iseed) .lt. density) then
-                  write(17,*) xx,yy,zz
+                  write(17,*) xx,yy,zz,'|', real(vxarr_in(rx,ry,rz)),
+     &              real(vyarr_in(rx,ry,rz)), real(vzarr_in(rx,ry,rz)),
+     &        '|', aimag(vxarr_in(rx,ry,rz)), aimag(vyarr_in(rx,ry,rz)),
+     &             aimag(vzarr_in(rx,ry,rz))
                end if
 !
 
