@@ -1,7 +1,7 @@
  &EZmock_v0_input
 
 ! output prefix
-datafile_prefix = "EZmock_slics_test_back3"
+datafile_prefix = "EZmock_slics_read_ZA"
 
 !output path (need to create it in advance)
 !datafile_path = "../mock_output/"
@@ -13,7 +13,8 @@ grid_num =192
 redshift = 1.041
 
 !G(z)^2 = G(0.84)^2 = 0.6546^2
-grow2z0 = 3197.41
+!grow2z0 = 3197.41
+grow2z0 = 0.365
 
 
 !!!density*boxsize^3

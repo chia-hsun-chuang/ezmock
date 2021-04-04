@@ -1,4 +1,5 @@
-! 20180413 add scatter2 to boost low density for modifying bik
+! 20210314 read ZA displacement prepared by Yu Yu 
+!     20180413 add scatter2 to boost low density for modifying bik
 ! use both particles and CIC to assign halos (when running out of particles for given grid point) -- 20171201
 !     EZmock2017 0107 use CIC displacement to assign velocity
 !     note: cleaner memory usage, optimize CIC, assign galaxies to particles (20161228)
@@ -359,7 +360,9 @@
       character*500 :: pkfile_path =
      & "../pk0421/"
       character*500 :: pkfile_prefix =
-     & "dk0.005"
+     &     "dk0.005"
+!
+      character*500 :: file_dis_x, file_dis_y, file_dis_z      
 !
       logical :: CIC_binning = .false. !I have shown that it's useless
       integer,parameter :: r_num_max = 10000, k_num_max = 10000
@@ -639,54 +642,55 @@ C$omp parallel do private(rx,ry,rz)
         deallocate(temp_array) !left: vxarr_in(real part saves white noise)
 
       else
-        write(*,*) "reading density file"
-        open(10,file=Trim(init_density_file),form='unformatted')
-        read (10) np1,np2,np3, temp_int
-        print*, 'np1,np2,np3,iseed'
-        print*, np1,np2,np3,temp_int
-        if (np1 .ne. grid_num) then
-          write(*,*)"the grid size does not match white noise file:",np1 
-          stop
-        end if
-        allocate(temp_array(grid_num,grid_num,grid_num)) !vxarr_in, temp_array
-        do i3=1,grid_num
-         read(10) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
-        enddo
-        close(10)
+        write(*,*) "skipping reading density file"         
+!        write(*,*) "reading density file"
+!        open(10,file=Trim(init_density_file),form='unformatted')
+!        read (10) np1,np2,np3, temp_int
+!        print*, 'np1,np2,np3,iseed'
+!        print*, np1,np2,np3,temp_int
+!        if (np1 .ne. grid_num) then
+!          write(*,*)"the grid size does not match white noise file:",np1 
+!          stop
+!        end if
+!        allocate(temp_array(grid_num,grid_num,grid_num)) !vxarr_in, temp_array
+!        do i3=1,grid_num
+!         read(10) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
+!        enddo
+!        close(10)
+!
+!        write(*,*) "finish reading initial density field file"
+!        time2 =  time()
+!        write(*,*) "time in sec:", time2-time1
 
-        write(*,*) "finish reading initial density field file"
-        time2 =  time()
-        write(*,*) "time in sec:", time2-time1
-
-!move density field to vxarr_in
-C$omp parallel do private(rx,ry,rz)
-        do rx = 1, grid_num
-          do ry = 1, grid_num
-            do rz = 1, grid_num
-              vxarr_in(rx,ry,rz) = cmplx(temp_array(rx,ry,rz),0)
-            end do
-          end do
-        end do
-        deallocate(temp_array) !left: vxarr_in(real part saves white noise)
+!!move density field to vxarr_in
+!C$omp parallel do private(rx,ry,rz)
+!        do rx = 1, grid_num
+!          do ry = 1, grid_num
+!            do rz = 1, grid_num
+!              vxarr_in(rx,ry,rz) = cmplx(temp_array(rx,ry,rz),0)
+!            end do
+!          end do
+!        end do
+!        deallocate(temp_array) !left: vxarr_in(real part saves white noise)
          
         
       end if
      
       
-!!for openmp
-      call sfftw_init_threads(iret)
-      if(iret .eq. 0) then
-          write(*,*) "something wrong with using fftw and openmp"
-          stop
-      end if
-      write(*,*) "number of threads=",omp_get_max_threads()
-
-      call sfftw_plan_with_nthreads(omp_get_max_threads())
-
-      call sfftw_plan_dft_3d(plan, grid_num, grid_num, grid_num,
-     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
-      call sfftw_execute_dft(plan,vxarr_in,vxarr_in)
-      call sfftw_destroy_plan(plan)
+!!!for openmp
+!      call sfftw_init_threads(iret)
+!      if(iret .eq. 0) then
+!          write(*,*) "something wrong with using fftw and openmp"
+!          stop
+!      end if
+!      write(*,*) "number of threads=",omp_get_max_threads()
+!
+!      call sfftw_plan_with_nthreads(omp_get_max_threads())
+!
+!      call sfftw_plan_dft_3d(plan, grid_num, grid_num, grid_num,
+!     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!      call sfftw_execute_dft(plan,vxarr_in,vxarr_in)
+!      call sfftw_destroy_plan(plan)
 
 
       allocate(vyarr_in(grid_num,grid_num,grid_num))
@@ -694,148 +698,205 @@ C$omp parallel do private(rx,ry,rz)
      
       temp = sqrt(1.0*grid_num**3/2) !to normalize white noise with given grid
 !      vxarr_in(1,1,1) = cmplx(Real(arr_in(1,1,1))/temp,0)
-C$omp parallel private(nx,ny,nz,kx,ky,kz,k_mag,k_mag2,pk_outo,tempo,
-C$omp+ak,bk,nx_conj,ny_conj,nz_conj,thread_id)
-!!reduction(+:sigma_G2)
-      thread_id = omp_get_thread_num()+1
-!      sigma_G2 = 0
-C$omp do
-      do nx = 0, grid_num-1
-        do ny = 0, grid_num-1
-           do nz = 0, grid_num-1
-              !remove frequecy larger than or equal to k_Ny/2
-           if ((nx .lt. grid_num/4 .or. nx .gt. grid_num/4*3) .and.
-     &         (ny .lt. grid_num/4 .or. ny .gt. grid_num/4*3) .and.
-     &         (nz .lt. grid_num/4 .or. nz .gt. grid_num/4*3)) then
-              
-            if((nx .eq. 0) .and. (ny .eq. 0) .and. (nz .eq. 0)) then
-              vxarr_in(1,1,1) = cmplx(0,0)
-              vyarr_in(1,1,1) = cmplx(0,0)
-              vzarr_in(1,1,1) = cmplx(0,0)
-            else
-              kx = 2.0*pi/boxsize*nx
-              ky = 2.0*pi/boxsize*ny
-              kz = 2.0*pi/boxsize*nz
-              if (nx .gt. grid_num/2) kx = 2.0*pi/boxsize*(nx-grid_num)
-              if (ny .gt. grid_num/2) ky = 2.0*pi/boxsize*(ny-grid_num)
-              if (nz .gt. grid_num/2) kz = 2.0*pi/boxsize*(nz-grid_num)
-              k_mag2 = kx**2 + ky**2 + kz**2
-              k_mag = sqrt(k_mag2)
-              call splint(k_array,pk_arrayo,y2o,k_num,k_mag,pk_outo)
+!C$omp parallel private(nx,ny,nz,kx,ky,kz,k_mag,k_mag2,pk_outo,tempo,
+!C$omp+ak,bk,nx_conj,ny_conj,nz_conj,thread_id)
+!!!reduction(+:sigma_G2)
+!      thread_id = omp_get_thread_num()+1
+!!      sigma_G2 = 0
+!C$omp do
+!      do nx = 0, grid_num-1
+!        do ny = 0, grid_num-1
+!           do nz = 0, grid_num-1
+!              !remove frequecy larger than or equal to k_Ny/2
+!           if ((nx .lt. grid_num/4 .or. nx .gt. grid_num/4*3) .and.
+!     &         (ny .lt. grid_num/4 .or. ny .gt. grid_num/4*3) .and.
+!     &         (nz .lt. grid_num/4 .or. nz .gt. grid_num/4*3)) then
+!              
+!            if((nx .eq. 0) .and. (ny .eq. 0) .and. (nz .eq. 0)) then
+!              vxarr_in(1,1,1) = cmplx(0,0)
+!              vyarr_in(1,1,1) = cmplx(0,0)
+!              vzarr_in(1,1,1) = cmplx(0,0)
+!            else
+!              kx = 2.0*pi/boxsize*nx
+!              ky = 2.0*pi/boxsize*ny
+!              kz = 2.0*pi/boxsize*nz
+!              if (nx .gt. grid_num/2) kx = 2.0*pi/boxsize*(nx-grid_num)
+!              if (ny .gt. grid_num/2) ky = 2.0*pi/boxsize*(ny-grid_num)
+!              if (nz .gt. grid_num/2) kz = 2.0*pi/boxsize*(nz-grid_num)
+!              k_mag2 = kx**2 + ky**2 + kz**2
+!              k_mag = sqrt(k_mag2)
+!              call splint(k_array,pk_arrayo,y2o,k_num,k_mag,pk_outo)
+!
+!!     tempo = sqrt(pk_outo/boxsize**3/2)
+!              !test Albert -- add rescaling factor from z_init to z_target
+!              tempo=sqrt(grow2z0/grid_num**3/2) 
+!!              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
+!
+!              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
+!              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp
+!              vxarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(tempo*bk*kx/k_mag2,-tempo*ak*kx/k_mag2)
+!              vyarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(tempo*bk*ky/k_mag2,-tempo*ak*ky/k_mag2)
+!              vzarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(tempo*bk*kz/k_mag2,-tempo*ak*kz/k_mag2)
+!
+!           end if
+!
+!        else
+!              vxarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(0,0)
+!              vyarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(0,0)
+!              vzarr_in(nx+1,ny+1,nz+1)=
+!     &              cmplx(0,0)
+!
+!           end if
+!          end do !kz
+!        end do !ky
+!      end do !kx
+!C$omp end do
+!C$omp end parallel
 
-!     tempo = sqrt(pk_outo/boxsize**3/2)
-              !test Albert -- add rescaling factor from z_init to z_target
-              tempo=sqrt(grow2z0/grid_num**3/2) 
-!              sigma_G2 = sigma_G2 + pk_outo*2 !*2 for nz < 0
-
-              ak = Real(vxarr_in(nx+1,ny+1,nz+1))/temp
-              bk = AIMAG(vxarr_in(nx+1,ny+1,nz+1))/temp
-              vxarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(tempo*bk*kx/k_mag2,-tempo*ak*kx/k_mag2)
-              vyarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(tempo*bk*ky/k_mag2,-tempo*ak*ky/k_mag2)
-              vzarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(tempo*bk*kz/k_mag2,-tempo*ak*kz/k_mag2)
-
-           end if
-
-        else
-              vxarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(0,0)
-              vyarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(0,0)
-              vzarr_in(nx+1,ny+1,nz+1)=
-     &              cmplx(0,0)
-
-           end if
-          end do !kz
-        end do !ky
-      end do !kx
-C$omp end do
-C$omp end parallel
-
-!      sigma_G2 = sigma_G2/boxsize**3
-      write(*,*) "finish assigning pk array"
-      time2 =  time()
-      write(*,*) "time in sec:", time2-time1
-
-      write(*,*) "start FFT"
-!!for openmp
-!      call sfftw_init_threads(iret)
-!      if(iret .eq. 0) then
-!          write(*,*) "something wrong with using fftw and openmp"
-!          stop
-!      end if
-!      write(*,*) "number of threads=",omp_get_max_threads()
-!      call sfftw_plan_with_nthreads(omp_get_max_threads())
-
-!      FFTW3
-      call sfftw_plan_dft_3d(planx, grid_num, grid_num, grid_num,
-!     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
-     &  vxarr_in, vxarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
-      call sfftw_execute_dft(planx,vxarr_in,vxarr_in)
-      call sfftw_destroy_plan(planx)
-
-      time2 =  time()
-      write(*,*) "1st FFT, time in sec:", time2-time1
-
-!      FFTW3
-      call sfftw_plan_dft_3d(plany, grid_num, grid_num, grid_num,
-!     &  vyarr_in, vyarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
-     &  vyarr_in, vyarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)
-      call sfftw_execute_dft(plany,vyarr_in,vyarr_in)
-      call sfftw_destroy_plan(plany)
-
-      time2 =  time()
-      write(*,*) "2nd FFT, time in sec:", time2-time1
-
-!      FFTW3
-      call sfftw_plan_dft_3d(planz, grid_num, grid_num, grid_num,
-!     &  vzarr_in, vzarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
-     &  vzarr_in, vzarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
-      call sfftw_execute_dft(planz,vzarr_in,vzarr_in)
-      call sfftw_destroy_plan(planz)
-
-      time2 =  time()
-      write(*,*) "3rd FFT, time in sec:", time2-time1
+!!      sigma_G2 = sigma_G2/boxsize**3
+!      write(*,*) "finish assigning pk array"
+!      time2 =  time()
+!      write(*,*) "time in sec:", time2-time1
+!
+!      write(*,*) "start FFT"
+!!!for openmp
+!!      call sfftw_init_threads(iret)
+!!      if(iret .eq. 0) then
+!!          write(*,*) "something wrong with using fftw and openmp"
+!!          stop
+!!      end if
+!!      write(*,*) "number of threads=",omp_get_max_threads()
+!!      call sfftw_plan_with_nthreads(omp_get_max_threads())
+!
+!!      FFTW3
+!      call sfftw_plan_dft_3d(planx, grid_num, grid_num, grid_num,
+!!     &  vxarr_in, vxarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vxarr_in, vxarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
+!      call sfftw_execute_dft(planx,vxarr_in,vxarr_in)
+!      call sfftw_destroy_plan(planx)
+!
+!      time2 =  time()
+!      write(*,*) "1st FFT, time in sec:", time2-time1
+!
+!!      FFTW3
+!      call sfftw_plan_dft_3d(plany, grid_num, grid_num, grid_num,
+!!     &  vyarr_in, vyarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vyarr_in, vyarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)
+!      call sfftw_execute_dft(plany,vyarr_in,vyarr_in)
+!      call sfftw_destroy_plan(plany)
+!
+!      time2 =  time()
+!      write(*,*) "2nd FFT, time in sec:", time2-time1
+!
+!!      FFTW3
+!      call sfftw_plan_dft_3d(planz, grid_num, grid_num, grid_num,
+!!     &  vzarr_in, vzarr_in, FFTW_FORWARD, FFTW_ESTIMATE)
+!     &  vzarr_in, vzarr_in, FFTW_BACKWARD, FFTW_ESTIMATE)      
+!      call sfftw_execute_dft(planz,vzarr_in,vzarr_in)
+!      call sfftw_destroy_plan(planz)
+!
+!      time2 =  time()
+!      write(*,*) "3rd FFT, time in sec:", time2-time1
 
 !--- displacement field using CIC ----------------------- raw zeldovich particles
-! using image part of array for CIC counting
-      write(*,*) "count initial CIC for za particles"
-      open(17,file=Trim(output_file)//'.raw')
-
-C$omp parallel do private(rx,ry,rz)
-      do rx = 1,grid_pdf
-         do ry = 1, grid_pdf
-            do rz = 1, grid_pdf
-              vxarr_in(rx,ry,rz) = cmplx(real(vxarr_in(rx,ry,rz)),0)
-            end do
-         end do
-      end do
-C$omp parallel do private(rx,ry,rz)
-      do rx = 1,grid_pdf
-         do ry = 1, grid_pdf
-            do rz = 1, grid_pdf
-              vyarr_in(rx,ry,rz) = cmplx(real(vyarr_in(rx,ry,rz)),0)
-            end do
-         end do
-      end do
-C$omp parallel do private(rx,ry,rz)
-      do rx = 1,grid_pdf
-         do ry = 1, grid_pdf
-            do rz = 1, grid_pdf
-              vzarr_in(rx,ry,rz) = cmplx(real(vzarr_in(rx,ry,rz)),0)
-            end do
-         end do
-      end do
-
+!! using image part of array for CIC counting
+!      write(*,*) "count initial CIC for za particles"
+!      open(17,file=Trim(output_file)//'.raw')
+!
+!C$omp parallel do private(rx,ry,rz)
+!      do rx = 1,grid_pdf
+!         do ry = 1, grid_pdf
+!            do rz = 1, grid_pdf
+!              vxarr_in(rx,ry,rz) = cmplx(real(vxarr_in(rx,ry,rz)),0)
+!            end do
+!         end do
+!      end do
+!C$omp parallel do private(rx,ry,rz)
+!      do rx = 1,grid_pdf
+!         do ry = 1, grid_pdf
+!            do rz = 1, grid_pdf
+!              vyarr_in(rx,ry,rz) = cmplx(real(vyarr_in(rx,ry,rz)),0)
+!            end do
+!         end do
+!      end do
+!C$omp parallel do private(rx,ry,rz)
+!      do rx = 1,grid_pdf
+!         do ry = 1, grid_pdf
+!            do rz = 1, grid_pdf
+!              vzarr_in(rx,ry,rz) = cmplx(real(vzarr_in(rx,ry,rz)),0)
+!            end do
+!         end do
+!      end do
+!
        write(*,*) "start to construct ZA density array"
         time2 =  time()
         write(*,*) "time in sec:", time2-time1
 
-        allocate(temp_array2(grid_num,grid_num,grid_num))
+        allocate(temp_array(grid_num,grid_num,grid_num))
+        allocate(temp_array2(grid_num,grid_num,grid_num))        
         allocate(temp_array3(grid_num,grid_num,grid_num))
 
+        tempo=sqrt(grow2z0)
+        
+        
+        file_dis_x="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+     &         "LOS960dispx0192.bin"  
+        open(31,file=Trim(file_dis_x),form='binary')
+        do i3=1,grid_num
+           read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
+        enddo
+        close(31)
+
+C$omp parallel do private(rx,ry,rz)
+      do rx = 1,grid_pdf
+         do ry = 1,grid_pdf
+            do rz = 1,grid_pdf
+              vxarr_in(rx,ry,rz) = cmplx(tempo*temp_array(rx,ry,rz),0)
+            end do
+         end do
+      end do
+
+        file_dis_y="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+     &         "LOS960dispx0192.bin"  
+        open(31,file=Trim(file_dis_y),form='binary')
+        do i3=1,grid_num
+           read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
+        enddo
+        close(31)
+
+C$omp parallel do private(rx,ry,rz)
+      do rx = 1,grid_pdf
+         do ry = 1,grid_pdf
+            do rz = 1,grid_pdf
+              vyarr_in(rx,ry,rz) = cmplx(tempo*temp_array(rx,ry,rz),0)
+            end do
+         end do
+      end do
+         
+        file_dis_z="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+     &         "LOS960dispz0192.bin"  
+        open(31,file=Trim(file_dis_z),form='binary')
+        do i3=1,grid_num
+           read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
+        enddo
+        close(31)
+
+C$omp parallel do private(rx,ry,rz)
+      do rx = 1,grid_pdf
+         do ry = 1,grid_pdf
+            do rz = 1,grid_pdf
+              vzarr_in(rx,ry,rz) = cmplx(tempo*temp_array(rx,ry,rz),0)
+            end do
+         end do
+      end do
+
+      deallocate(temp_array)
+      
 C$omp parallel do private(rx,ry,rz)
       do rx = 1,grid_pdf
          do ry = 1, grid_pdf
