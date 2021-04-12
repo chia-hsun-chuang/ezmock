@@ -862,7 +862,7 @@ C$omp parallel do private(rx,ry,rz)
       end do
 
         file_dis_y="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
-     &         "LOS960dispx0192.bin"  
+     &         "LOS960dispy0192.bin"  
         open(31,file=Trim(file_dis_y),form='binary')
         do i3=1,grid_num
            read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
