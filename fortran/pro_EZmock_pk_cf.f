@@ -843,9 +843,26 @@ C$omp parallel do private(rx,ry,rz)
 
         tempo=sqrt(grow2z0)
         
+        open(30,file="/global/homes/c/chuang/my_code/EZmock_github/"//
+     &       "ezmock/SLICS4EZmock.txt")
+!           read(30,'(A)') file_dis_x
+!           write(*,*) "first line: ", Trim(file_dis_x)
+!           stop
+        do i=1, (iseed-1)*3
+           read(30,'(A)') file_dis_x
+           write(*,*) "skip: ", Trim(file_dis_x)
+        enddo
         
-        file_dis_x="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
-     &         "LOS960dispx0192.bin"  
+        read(30,'(A)') file_dis_x
+        read(30,'(A)') file_dis_y
+        read(30,'(A)') file_dis_z
+        write(*,*) Trim(file_dis_x)
+        write(*,*) Trim(file_dis_y)
+        write(*,*) Trim(file_dis_z)
+        close(30)
+        
+!        file_dis_x="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+!     &         "LOS960dispx0192.bin"  
         open(31,file=Trim(file_dis_x),form='binary')
         do i3=1,grid_num
            read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
@@ -861,8 +878,8 @@ C$omp parallel do private(rx,ry,rz)
          end do
       end do
 
-        file_dis_y="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
-     &         "LOS960dispy0192.bin"  
+!        file_dis_y="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+!     &         "LOS960dispy0192.bin"  
         open(31,file=Trim(file_dis_y),form='binary')
         do i3=1,grid_num
            read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
@@ -878,8 +895,8 @@ C$omp parallel do private(rx,ry,rz)
          end do
       end do
          
-        file_dis_z="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
-     &         "LOS960dispz0192.bin"  
+!        file_dis_z="/global/homes/c/chuang/scratch_cori/SLICS/ICs/ZA/"//
+!     &         "LOS960dispz0192.bin"  
         open(31,file=Trim(file_dis_z),form='binary')
         do i3=1,grid_num
            read(31) ((temp_array(i1,i2,i3),i1=1,grid_num),i2=1,grid_num)
